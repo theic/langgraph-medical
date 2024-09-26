@@ -1,76 +1,105 @@
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
-import { AIMessage } from "@langchain/core/messages";
+import { AudioTranscriptLoader } from '@langchain/community/document_loaders/web/assemblyai';
+import { AIMessage } from '@langchain/core/messages';
 import {
   END,
   MessagesAnnotation,
   START,
   StateGraph,
-} from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { ChatOpenAI } from "@langchain/openai";
+} from '@langchain/langgraph';
+import { ChatOpenAI } from '@langchain/openai';
 
 const systemMessage = {
   role: 'system',
   content:
-    `You are a personal copywriter. Your task is to write messages, emails, and wishes upon request, ensuring perfect grammar and tailored content. You excel at crafting compelling and appropriate text for various occasions and audiences.`,
+    'You are an audio transcription tool. Your task is to accurately transcribe\n' +
+    'audio content provided to you. You should maintain the original meaning\n' +
+    'and context of the audio, capturing spoken words, relevant sound effects,\n' +
+    'and speaker changes where applicable. Ensure the transcription is clear,\n' +
+    'well-formatted, and easy to read.',
 };
 
 const llm = new ChatOpenAI({
-  model: "gpt-4o",
+  model: 'gpt-4o',
   temperature: 0,
 });
 
-const webSearchTool = new TavilySearchResults({
-  maxResults: 4,
-});
-const tools = [webSearchTool];
+const transcribeAudio = async (state: typeof MessagesAnnotation.State) => {
+  const { messages } = state;
+  const lastMessage = messages[messages.length - 1];
 
-const toolNode = new ToolNode(tools);
+  console.debug('lastMessage', lastMessage);
+
+  const content = lastMessage.content as string;
+  
+  if (lastMessage._getType() === 'human' && content.includes('http')) {
+    try {
+      // Extract the audio URL from the message content
+      const audioUrl = extractAudioUrl(content);
+
+      // Initialize the AudioTranscriptLoader with the extracted URL
+      const audioTranscriptLoader = new AudioTranscriptLoader(
+        {
+          audio: audioUrl,
+        },
+        {
+          apiKey: process.env.ASSEMBLYAI_API_KEY,
+        }
+      );
+
+      const docs = await audioTranscriptLoader.load();
+      const transcription = docs[0].pageContent;
+      console.debug('Transcription:', transcription);
+      return { messages: [new AIMessage(`Transcription: ${transcription}`)] };
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      return { messages: [new AIMessage('Sorry, I couldn\'t transcribe the audio file.')] };
+    }
+  }
+  
+  return { messages: [] };
+};
+
+// Add a utility function to extract the audio URL from the message
+const extractAudioUrl = (content: string): string => {
+  // Implement a method to extract a valid audio URL from the content
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = content.match(urlRegex);
+  if (urls && urls.length > 0) {
+    return urls[0];
+  }
+  throw new Error('No valid audio URL found in the message.');
+};
 
 const callModel = async (state: typeof MessagesAnnotation.State) => {
   const { messages } = state;
-
-  const llmWithTools = llm.bindTools(tools);
-  const result = await llmWithTools.invoke([systemMessage, ...messages]);
+  const result = await llm.invoke([systemMessage, ...messages]);
   return { messages: [result] };
 };
 
-const shouldContinue = (state: typeof MessagesAnnotation.State) => {
+const shouldTranscribe = (state: typeof MessagesAnnotation.State) => {
   const { messages } = state;
-
   const lastMessage = messages[messages.length - 1];
-  if (
-    lastMessage._getType() !== "ai" ||
-    !(lastMessage as AIMessage).tool_calls?.length
-  ) {
-    // LLM did not call any tools, or it's not an AI message, so we should end.
-    return END;
+  
+  console.debug('lastMessage', lastMessage);
+
+  const content = lastMessage.content as string;
+
+  if (lastMessage._getType() === 'human' && content.includes('http')) {
+    return 'transcribe';
   }
-  return "tools";
+  return 'agent';
 };
 
-/**
- * MessagesAnnotation is a pre-built state annotation imported from @langchain/langgraph.
- * It is the same as the following annotation:
- *
- * ```typescript
- * const MessagesAnnotation = Annotation.Root({
- *   messages: Annotation<BaseMessage[]>({
- *     reducer: messagesStateReducer,
- *     default: () => [systemMessage],
- *   }),
- * });
- * ```
- */
 const workflow = new StateGraph(MessagesAnnotation)
-  .addNode("agent", callModel)
-  .addEdge(START, "agent")
-  .addNode("tools", toolNode)
-  .addEdge("tools", "agent")
-  .addConditionalEdges("agent", shouldContinue, ["tools", END]);
+  .addNode('transcribe', transcribeAudio)
+  .addNode('agent', callModel)
+  .addEdge(START, 'transcribe')
+  .addEdge(START, 'agent')
+  .addConditionalEdges(
+    START,
+    shouldTranscribe
+  )
+  .addEdge('transcribe', 'agent')
+  .addEdge('agent', END);
 
-export const graph = workflow.compile({
-  // The LangGraph Studio/Cloud API will automatically add a checkpointer
-  // only uncomment if running locally
-  // checkpointer: new MemorySaver(),
-});
+export const graph = workflow.compile();
