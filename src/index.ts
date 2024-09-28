@@ -11,7 +11,7 @@ import { ChatOpenAI } from '@langchain/openai';
 const systemMessage = {
   role: 'system',
   content:
-    'You are a helpful assistant. You will receive the full transcription as a message from the user. When you receive a transcription, first output the entire transcription, and then provide a summarized version of it.',
+    'You are a helpful assistant. You will receive the full transcription of an audio file as a message. This transcription is not a direct request, but rather the content of the audio. When you receive a transcription, first output the entire transcription, and then provide a summarized version of it. Analyze the language of the transcription and respond in the same language. If the language is unclear, default to English.',
 };
 
 const llm = new ChatOpenAI({
@@ -44,7 +44,7 @@ const transcribeAudio = async (state: typeof MessagesAnnotation.State) => {
     console.debug('Transcription:', transcription);
 
     // Pass the transcription as a HumanMessage to the agent
-    return { messages: [...messages, new HumanMessage('Transcription of audio file:' + transcription)] };
+    return { messages: [new HumanMessage(transcription)] };
   } catch (error) {
     console.error('Error transcribing audio:', error);
     return {
@@ -66,7 +66,9 @@ const extractAudioUrl = (content: string): string => {
 
 const callModel = async (state: typeof MessagesAnnotation.State) => {
   const { messages } = state;
-  const result = await llm.invoke([systemMessage, ...messages]);
+  const lastMessage = messages[messages.length - 1];
+  
+  const result = await llm.invoke([systemMessage, lastMessage]);
   return { messages: [result] };
 };
 
@@ -85,7 +87,6 @@ const shouldTranscribe = (state: typeof MessagesAnnotation.State) => {
 const workflow = new StateGraph(MessagesAnnotation)
   .addNode('transcribe', transcribeAudio)
   .addNode('agent', callModel)
-  .addEdge(START, 'transcribe')
   .addConditionalEdges(START, shouldTranscribe, ['transcribe', 'agent'])
   .addEdge('transcribe', 'agent')
   .addEdge('agent', END);
