@@ -35,8 +35,8 @@ const transcribeAudio = async (state: typeof MessagesAnnotation.State) => {
 
     // Initialize the AudioTranscriptLoader with the extracted URL
     const audioTranscriptLoader = new AudioTranscriptLoader(
-      { audio: audioUrl },
-      { apiKey: process.env.ASSEMBLYAI_API_KEY }
+      { audio: audioUrl, language_detection: true, speech_model: 'best' },
+      { apiKey: process.env.ASSEMBLYAI_API_KEY },
     );
 
     const docs = await audioTranscriptLoader.load();
@@ -66,9 +66,8 @@ const extractAudioUrl = (content: string): string => {
 
 const callModel = async (state: typeof MessagesAnnotation.State) => {
   const { messages } = state;
-  const lastMessage = messages[messages.length - 1];
-  
-  const result = await llm.invoke([systemMessage, lastMessage]);
+
+  const result = await llm.invoke([systemMessage, ...messages.slice(1)]);
   return { messages: [result] };
 };
 
