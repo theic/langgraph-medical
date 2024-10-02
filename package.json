@@ -1,7 +1,7 @@
 {
   "name": "langgraph-medical",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "build": "npm run tsc -- --project tsconfig.json --outDir dist",
@@ -18,7 +18,9 @@
     "@langchain/core": "^0.2.31",
     "@langchain/langgraph": "^0.2.1",
     "@langchain/openai": "^0.2.8",
-    "assemblyai": "^4.7.0"
+    "@types/pdfkit": "^0.13.5",
+    "assemblyai": "^4.7.0",
+    "pdfkit": "^0.15.0"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.7",

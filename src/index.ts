@@ -7,15 +7,26 @@ import {
   StateGraph,
 } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
+import { doctorPatientDialog, patientCardTemplate } from 'constant.js';
 
 const systemMessage = {
   role: 'system',
   content:
-    'You are a helpful assistant. You will receive the full transcription of an audio file as a message. This transcription is not a direct request, but rather the content of the audio. When you receive a transcription, first output the entire transcription, and then provide a summarized version of it. Analyze the language of the transcription and respond in the same language. If the language is unclear, default to English.',
+    `You are a medical assistant tasked with analyzing doctor-patient dialogues and generating structured patient cards. When you receive a transcription of a doctor-patient conversation, your job is to create a detailed patient card based on the information provided. Use the following example as a guide for structuring the patient card:
+
+    Example of a doctor-patient dialogue:
+    ${doctorPatientDialog}
+
+    Patient Card Template:
+    ${patientCardTemplate}
+
+    After generating the patient card, be prepared to answer follow-up questions about the context of the dialogue. Analyze the language of the transcription and respond in the same language. If the language is unclear, default to English.
+    Keep markdown syntax in the patient card.
+    `,
 };
 
 const llm = new ChatOpenAI({
-  model: 'gpt-4o-mini',
+  model: 'gpt-4o',
   temperature: 0,
 });
 
@@ -31,20 +42,23 @@ const transcribeAudio = async (state: typeof MessagesAnnotation.State) => {
     // Extract the audio URL from the message content
     const audioUrl = extractAudioUrl(content);
 
-    console.debug('transcribeAudio Audio URL:', audioUrl);
-
     // Initialize the AudioTranscriptLoader with the extracted URL
     const audioTranscriptLoader = new AudioTranscriptLoader(
-      { audio: audioUrl, language_detection: true, speech_model: 'best' },
+      { audio: audioUrl, language_detection: true, speech_model: 'best', speaker_labels: true, speakers_expected: 2 },
       { apiKey: process.env.ASSEMBLYAI_API_KEY },
     );
 
     const docs = await audioTranscriptLoader.load();
-    const transcription = docs[0].pageContent;
-    console.debug('Transcription:', transcription);
+    const transcriptionJson = docs[0].metadata.utterances?.map(utterance => ({
+      speaker: utterance.speaker,
+      text: utterance.text
+    }));
 
-    // Pass the transcription as a HumanMessage to the agent
-    return { messages: [new HumanMessage(transcription)] };
+    // Convert JSON to formatted text
+    const formattedTranscription = formatTranscription(transcriptionJson);
+
+    // Pass the formatted transcription as a HumanMessage to the agent
+    return { messages: [new HumanMessage(formattedTranscription)] };
   } catch (error) {
     console.error('Error transcribing audio:', error);
     return {
@@ -53,6 +67,15 @@ const transcribeAudio = async (state: typeof MessagesAnnotation.State) => {
       ],
     };
   }
+};
+
+// Helper function to format the transcription
+const formatTranscription = (transcription: Array<{ speaker: string; text: string }> | undefined): string => {
+  if (!transcription) return "No transcription available.";
+
+  return transcription.map(({ speaker, text }) => {
+    return `${speaker}:\n  ${text.split('\n').join('\n  ')}`;
+  }).join('\n\n');
 };
 
 const extractAudioUrl = (content: string): string => {
