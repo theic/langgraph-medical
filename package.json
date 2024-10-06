@@ -9,7 +9,8 @@
     "lint": "eslint src",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --check \"**/*.ts\""
+    "format:check": "prettier --check \"**/*.ts\"",
+    "start:api": "ts-node src/api.ts"
   },
   "author": "Brace Sproul",
   "license": "MIT",
@@ -18,9 +19,7 @@
     "@langchain/core": "^0.2.31",
     "@langchain/langgraph": "^0.2.1",
     "@langchain/openai": "^0.2.8",
-    "@types/pdfkit": "^0.13.5",
-    "assemblyai": "^4.7.0",
-    "pdfkit": "^0.15.0"
+    "assemblyai": "^4.7.0"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.7",

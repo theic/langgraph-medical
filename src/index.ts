@@ -22,6 +22,9 @@ const systemMessage = {
 
     After generating the patient card, be prepared to answer follow-up questions about the context of the dialogue. Analyze the language of the transcription and respond in the same language. If the language is unclear, default to English.
     Keep markdown syntax in the patient card.
+
+    If the message request is not clear or no transcription is provided, ask for additional information or request an audio file for transcription. For example:
+    "I'm sorry, but I need more information to assist you properly. Could you please provide more details about your request or share an audio file of the doctor-patient conversation for transcription?"
     `,
 };
 

@@ -29,49 +29,55 @@ B: Bardzo Panu dziękuję.
 `;
 
 export const patientCardTemplate: string = `
-**👤 Informacje o Pacjencie**
-- **Imię i nazwisko:** Katyryna Marczanko
-- **Data:** 26 października 2023
-- **Lekarz prowadzący:** Dr. Maciej Nasalski
+**I. INFORMACJE O PACJENCIE**
 
-**🩺 Główny Powód Wizyty**
-- Nawracający ból brzucha z biegunką
+Imię i nazwisko: \`Katyryna Marczanko\`
+Data: \`26 października 2023\`
+Lekarz prowadzący: \`Dr. Maciej Nasalski\`
 
-**📖 Historia Obecnej Choroby**
-- **Początek:** Kilka tygodni temu
-- **Objawy:**
-  - Nawracający ból brzucha
-  - Biegunka
-  - Ostatnio utrata wagi
-  - Okazjonalna gorączka
+**II. GŁÓWNY POWÓD WIZYTY**
 
-**📋 Istotna Historia Medyczna**
-- **Historia rodzinna:** Matka zdiagnozowana z chorobą Crohna
-- **Alergie:** Orzechy (nie ciężka)
-- **Przeszłość medyczna:** Brak wcześniejszych poważnych chorób lub operacji
-- Ogólnie dobry stan zdrowia przed obecnymi problemami
+Nawracający ból brzucha z biegunką
 
-**⚕️ Ocena**
-- Wstępna diagnoza oczekująca na dalsze badania:
-  - Podejrzenie nieswoistego zapalenia jelit (możliwa dziedziczna choroba Crohna)
-  - Potrzebne różnicowanie diagnozy
+**III. HISTORIA OBECNEJ CHOROBY**
 
-**🗂 Plan**
-1. **Badania diagnostyczne:**
-   - Badania krwi
-   - Możliwa endoskopia
-   - Możliwa kolonoskopia
+Początek: Kilka tygodni temu
+Objawy:
+- Nawracający ból brzucha
+- Biegunka
+- Ostatnio utrata wagi
+- Okazjonalna gorączka
 
-2. **Zalecenia:**
-   - Uważne monitorowanie objawów
-   - Prowadzenie dziennika żywieniowego
-   - Nawadnianie organizmu
-   - Unikanie znanych alergenów (orzechy)
+**IV. ISTOTNA HISTORIA MEDYCZNA**
 
-3. **Kontrola:**
-   - Umówić wizytę po dostępności wyników badań
+Historia rodzinna: Matka zdiagnozowana z chorobą Crohna
+Alergie: Orzechy (nie ciężka)
+Przeszłość medyczna: Brak wcześniejszych poważnych chorób lub operacji
+Ogólnie dobry stan zdrowia przed obecnymi problemami
 
-**📝 Notatki**
-- Pacjentka współpracuje i jest chętna do dalszych badań
-- Zachęcono pacjentkę do kontaktu z lekarzem w przypadku pytań podczas procesu diagnostycznego
+**V. OCENA**
+
+Wstępna diagnoza oczekująca na dalsze badania:
+
+Podejrzenie nieswoistego zapalenia jelit (możliwa dziedziczna choroba Crohna)
+Potrzebne różnicowanie diagnozy
+
+**VI. PLAN**
+
+A. Badania diagnostyczne:
+• Badania krwi
+• Możliwa endoskopia
+• Możliwa kolonoskopia
+B. Zalecenia:
+• Uważne monitorowanie objawów
+• Prowadzenie dziennika żywieniowego
+• Nawadnianie organizmu
+• Unikanie znanych alergenów (orzechy)
+C. Kontrola:
+• Umówić wizytę po dostępności wyników badań
+
+**VII. NOTATKI**
+
+Pacjentka współpracuje i jest chętna do dalszych badań
+Zachęcono pacjentkę do kontaktu z lekarzem w przypadku pytań podczas procesu diagnostycznego
 `;
